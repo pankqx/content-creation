@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clipzer</title>
+<meta name="author" content="K S Pankaj">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loader" aria-hidden="true">
+  <div class="leader">
+    <div class="sweep"></div>
+    <div class="cross"></div>
+    <span id="count">3</span>
+  </div>
+  <p class="loader-name">Clipzer</p>
+  <p class="loader-credit">Built, developed &amp; owned by K S Pankaj</p>
+</div>
+
+<canvas id="dust" aria-hidden="true"></canvas>
+
+<header class="top">
+  <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>Clipzer</a>
+  <ul class="chips" id="chips" aria-label="System status"></ul>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <p class="eyebrow">Reel 01 &middot; the cutting room</p>
+    <h1>One long video in.<br><em>A stack of shorts</em> out.</h1>
+    <p class="lede">Clipzer listens to the whole video, picks the moments people will stop scrolling for, crops them to 9:16 and burns in word-by-word captions. All on your own machine.</p>
+  </section>
+
+  <form class="composer" id="composer" novalidate>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-link" aria-selected="true" aria-controls="pane-link">Paste a link</button>
+      <button type="button" role="tab" id="tab-file" aria-selected="false" aria-controls="pane-file">Upload a file</button>
+    </div>
+
+    <div class="pane" id="pane-link" role="tabpanel" aria-labelledby="tab-link">
+      <label class="sr" for="url">Video link</label>
+      <input id="url" name="url" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+    </div>
+    <div class="pane" id="pane-file" role="tabpanel" aria-labelledby="tab-file" hidden>
+      <label class="drop" id="drop" for="file">
+        <input id="file" name="file" type="file" accept="video/*,.mkv">
+        <span class="drop-title" id="drop-title">Drop a video here, or tap to choose</span>
+        <span class="drop-hint">mp4, mov, mkv, webm</span>
+      </label>
+    </div>
+
+    <div class="options">
+      <div class="field">
+        <label for="num_clips">Clips to make</label>
+        <select id="num_clips" name="num_clips">
+          <option value="3">3</option><option value="6" selected>6</option><option value="9">9</option><option value="12">12</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="length">Clip length</label>
+        <select id="length">
+          <option value="15-30">15&ndash;30 s</option><option value="25-50" selected>25&ndash;50 s</option><option value="40-59">40&ndash;59 s</option><option value="60-90">60&ndash;90 s</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="style">Caption style</label>
+        <select id="style" name="style"><option value="pop">Pop yellow</option></select>
+      </div>
+      <div class="field">
+        <label for="framing">Framing</label>
+        <select id="framing" name="framing">
+          <option value="face" selected>Follow the face</option><option value="blur">Full frame on blur</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="language">Spoken language</label>
+        <select id="language" name="language">
+          <option value="" selected>Detect</option><option value="en">English</option><option value="hi">Hindi</option><option value="kn">Kannada</option>
+        </select>
+      </div>
+      <div class="field check">
+        <input id="show_title" name="show_title" type="checkbox" checked>
+        <label for="show_title">Title card on top</label>
+      </div>
+    </div>
+
+    <div class="send">
+      <div class="check rights">
+        <input id="rights" name="rights" type="checkbox">
+        <label for="rights">This is my video, or I have permission to clip it (a clipping campaign, a licence, or the owner's OK).</label>
+      </div>
+      <button class="go" id="go" type="submit"><span>Make my clips</span></button>
+    </div>
+    <p class="form-error" id="form-error" role="alert" hidden></p>
+  </form>
+
+  <section class="progress" id="progress" hidden aria-live="polite">
+    <div class="progress-head">
+      <h2 id="job-name">Working</h2>
+      <span class="timecode" id="job-pct">00%</span>
+    </div>
+    <ol class="steps" id="steps">
+      <li data-stage="import">Import</li>
+      <li data-stage="transcribe">Listen</li>
+      <li data-stage="moments">Find moments</li>
+      <li data-stage="render">Cut &amp; caption</li>
+    </ol>
+    <div class="strip"><div class="strip-fill" id="strip-fill"></div></div>
+    <p class="progress-msg" id="job-msg">Waiting in the queue</p>
+  </section>
+
+  <section class="results" id="results" hidden>
+    <div class="results-head">
+      <h2>Your clips</h2>
+      <p id="results-note"></p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="library" id="library" hidden>
+    <h2>Earlier jobs</h2>
+    <ul id="jobs"></ul>
+  </section>
+</main>
+
+<footer>
+  <p class="credit">Built, developed &amp; owned by <strong>K S Pankaj</strong></p>
+  <p class="fine">Clip only what you own or are allowed to clip. &copy; <span id="year"></span> K S Pankaj. All rights reserved.</p>
+</footer>
+
+<template id="card">
+  <article class="card">
+    <div class="frame">
+      <video controls preload="none" playsinline></video>
+      <span class="score"></span>
+    </div>
+    <div class="card-body">
+      <h3></h3>
+      <p class="reason"></p>
+      <p class="meta"></p>
+      <div class="card-actions">
+        <a class="btn" download>Download</a>
+        <button class="btn ghost" type="button">Copy title</button>
+      </div>
+    </div>
+  </article>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>
