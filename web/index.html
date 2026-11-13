@@ -5,151 +5,283 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Clipzer</title>
 <meta name="author" content="K S Pankaj">
+<meta name="description" content="Clipzer turns long videos into captioned vertical shorts. Built, developed and owned by K S Pankaj.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- Loading screen -->
 <div id="loader" aria-hidden="true">
-  <div class="leader">
-    <div class="sweep"></div>
-    <div class="cross"></div>
-    <span id="count">3</span>
-  </div>
-  <p class="loader-name">Clipzer</p>
+  <canvas class="globe" id="loader-globe" width="320" height="320"></canvas>
+  <p class="loader-word">CLIPZER</p>
+  <div class="loader-line"><span></span></div>
   <p class="loader-credit">Built, developed &amp; owned by K S Pankaj</p>
 </div>
 
-<canvas id="dust" aria-hidden="true"></canvas>
-
-<header class="top">
-  <a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>Clipzer</a>
+<header class="bar">
+  <a class="wordmark" href="#top" aria-label="Clipzer home">CLIPZER</a>
   <ul class="chips" id="chips" aria-label="System status"></ul>
+  <a class="by" href="https://www.linkedin.com/in/pankqx" rel="noopener">by K S Pankaj</a>
 </header>
 
 <main id="top">
-  <section class="hero">
-    <p class="eyebrow">Reel 01 &middot; the cutting room</p>
-    <h1>One long video in.<br><em>A stack of shorts</em> out.</h1>
-    <p class="lede">Clipzer listens to the whole video, picks the moments people will stop scrolling for, crops them to 9:16 and burns in word-by-word captions. All on your own machine.</p>
+  <!-- Hero: the globe -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow">Local AI clipper &middot; v2</p>
+      <h1 id="hero-title"><span>Find the</span><span class="it">moment.</span></h1>
+      <p class="hero-lede">Clipzer listens to a long video, scores every possible moment on seven signals, and cuts the best ones into captioned shorts. It runs on your own laptop, with no subscription and no minute limits.</p>
+      <a class="ghost-link" href="#stage">Start a project <span aria-hidden="true">&darr;</span></a>
+    </div>
+    <div class="hero-globe">
+      <canvas class="globe" id="hero-globe" aria-label="Rotating wireframe globe. Drag to spin it." role="img"></canvas>
+      <p class="globe-hint">drag to spin</p>
+    </div>
   </section>
 
-  <form class="composer" id="composer" novalidate>
-    <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-link" aria-selected="true" aria-controls="pane-link">Paste a link</button>
-      <button type="button" role="tab" id="tab-file" aria-selected="false" aria-controls="pane-file">Upload a file</button>
+  <!-- Workspace: grid-paper stage + controls panel -->
+  <section class="workspace" id="stage" aria-label="Make clips">
+    <div class="canvas" id="canvas">
+      <h2 class="mega mega-a" id="mega-a">TRY IT</h2>
+
+      <!-- Composer -->
+      <form class="composer" id="composer" novalidate>
+        <div class="pill" id="pill">
+          <label class="sr" for="url">Video link</label>
+          <input id="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+                 placeholder="Paste a YouTube link, or drop a video file here">
+          <div class="pill-row">
+            <div class="source" id="source">
+              <button class="attach" type="button" id="attach" aria-label="Choose a video file">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12.5 14.6 6a3 3 0 0 1 4.2 4.2l-8 8a5 5 0 0 1-7-7L11 4"/></svg>
+              </button>
+              <input id="file" type="file" accept="video/*,.mkv" hidden>
+              <span class="source-text" id="source-text">or <button type="button" class="link" id="attach-2">choose a file</button></span>
+            </div>
+            <button class="send" id="send" type="submit" aria-label="Make my clips">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="check rights">
+          <input id="rights" type="checkbox">
+          <label for="rights">I own this video or have permission to clip it</label>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </form>
+
+      <!-- Progress -->
+      <div class="run" id="run" hidden aria-live="polite">
+        <div class="run-head">
+          <p class="run-name" id="run-name"></p>
+          <p class="run-pct" id="run-pct">00%</p>
+        </div>
+        <ol class="stages" id="stages">
+          <li data-stage="import">Import</li><li data-stage="transcribe">Listen</li><li data-stage="analyze">Analyse</li>
+          <li data-stage="moments">Score</li><li data-stage="render">Cut</li><li data-stage="write">Write</li>
+        </ol>
+        <p class="run-msg" id="run-msg"></p>
+        <button class="text-btn" id="cancel" type="button">Cancel</button>
+      </div>
+
+      <!-- Clips -->
+      <div class="reel" id="reel" hidden>
+        <div class="reel-head">
+          <p class="reel-note" id="reel-note"></p>
+          <div class="reel-links"><button class="blue-link" id="new-project" type="button">+ New project</button><a class="blue-link" href="#library">All projects &rarr;</a></div>
+        </div>
+        <div class="track" id="track"></div>
+      </div>
+
+      <div class="mega-b">
+        <h2 class="mega" id="mega-b">YOUR WAY</h2>
+        <p class="mega-sub" id="mega-sub">Paste a link or drop a file. Clipzer finds the hooks, cuts them to 9:16 and captions every word.</p>
+      </div>
     </div>
 
-    <div class="pane" id="pane-link" role="tabpanel" aria-labelledby="tab-link">
-      <label class="sr" for="url">Video link</label>
-      <input id="url" name="url" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
-    </div>
-    <div class="pane" id="pane-file" role="tabpanel" aria-labelledby="tab-file" hidden>
-      <label class="drop" id="drop" for="file">
-        <input id="file" name="file" type="file" accept="video/*,.mkv">
-        <span class="drop-title" id="drop-title">Drop a video here, or tap to choose</span>
-        <span class="drop-hint">mp4, mov, mkv, webm</span>
-      </label>
-    </div>
+    <!-- Controls -->
+    <aside class="controls" id="controls" aria-label="Controls">
+      <div class="controls-head">
+        <span>Controls</span>
+        <button class="icon-btn" id="reset-controls" type="button" title="Reset to defaults" aria-label="Reset controls to defaults">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg>
+        </button>
+      </div>
 
-    <div class="options">
-      <div class="field">
-        <label for="num_clips">Clips to make</label>
-        <select id="num_clips" name="num_clips">
-          <option value="3">3</option><option value="6" selected>6</option><option value="9">9</option><option value="12">12</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="length">Clip length</label>
-        <select id="length">
-          <option value="15-30">15&ndash;30 s</option><option value="25-50" selected>25&ndash;50 s</option><option value="40-59">40&ndash;59 s</option><option value="60-90">60&ndash;90 s</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="style">Caption style</label>
-        <select id="style" name="style"><option value="pop">Pop yellow</option></select>
-      </div>
-      <div class="field">
-        <label for="framing">Framing</label>
-        <select id="framing" name="framing">
-          <option value="face" selected>Follow the face</option><option value="blur">Full frame on blur</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="language">Spoken language</label>
-        <select id="language" name="language">
-          <option value="" selected>Detect</option><option value="en">English</option><option value="hi">Hindi</option><option value="kn">Kannada</option>
-        </select>
-      </div>
-      <div class="field check">
-        <input id="show_title" name="show_title" type="checkbox" checked>
-        <label for="show_title">Title card on top</label>
-      </div>
-    </div>
+      <details class="group" open>
+        <summary>Output</summary>
+        <div class="row"><label for="c-num">Clips</label><output id="o-num"></output></div>
+        <input id="c-num" type="range" min="1" max="12" step="1">
+        <div class="row"><label for="c-min">Shortest</label><output id="o-min"></output></div>
+        <input id="c-min" type="range" min="10" max="90" step="5">
+        <div class="row"><label for="c-max">Longest</label><output id="o-max"></output></div>
+        <input id="c-max" type="range" min="15" max="120" step="5">
+        <p class="lbl" id="l-aspect">Aspect ratio</p>
+        <div class="seg" id="c-aspect" role="radiogroup" aria-labelledby="l-aspect"></div>
+      </details>
 
-    <div class="send">
-      <div class="check rights">
-        <input id="rights" name="rights" type="checkbox">
-        <label for="rights">This is my video, or I have permission to clip it (a clipping campaign, a licence, or the owner's OK).</label>
-      </div>
-      <button class="go" id="go" type="submit"><span>Make my clips</span></button>
-    </div>
-    <p class="form-error" id="form-error" role="alert" hidden></p>
-  </form>
+      <details class="group" open>
+        <summary>Captions</summary>
+        <div class="styles" id="c-style" role="radiogroup" aria-label="Caption style"></div>
+        <div class="toggle-row"><label for="c-title">Title card</label><input id="c-title" type="checkbox" class="switch"></div>
+        <label class="lbl" for="c-lang">Spoken language</label>
+        <select id="c-lang">
+          <option value="">Detect automatically</option><option value="en">English</option>
+          <option value="hi">Hindi</option><option value="kn">Kannada</option>
+        </select>
+      </details>
 
-  <section class="progress" id="progress" hidden aria-live="polite">
-    <div class="progress-head">
-      <h2 id="job-name">Working</h2>
-      <span class="timecode" id="job-pct">00%</span>
-    </div>
-    <ol class="steps" id="steps">
-      <li data-stage="import">Import</li>
-      <li data-stage="transcribe">Listen</li>
-      <li data-stage="moments">Find moments</li>
-      <li data-stage="render">Cut &amp; caption</li>
-    </ol>
-    <div class="strip"><div class="strip-fill" id="strip-fill"></div></div>
-    <p class="progress-msg" id="job-msg">Waiting in the queue</p>
+      <details class="group" open>
+        <summary>Framing</summary>
+        <div class="seg" id="c-framing" role="radiogroup" aria-label="Framing"></div>
+      </details>
+
+      <details class="group" open>
+        <summary>AI director</summary>
+        <label class="lbl" for="c-genre">Kind of video</label>
+        <select id="c-genre"></select>
+        <label class="lbl" for="c-focus">What should it look for?</label>
+        <input id="c-focus" type="text" maxlength="200" placeholder="e.g. money lessons, the funniest bits">
+        <label class="lbl" for="c-tone">Copy tone</label>
+        <select id="c-tone"></select>
+      </details>
+
+      <details class="group">
+        <summary>Audio</summary>
+        <div class="toggle-row"><label for="c-norm">Even out loudness</label><input id="c-norm" type="checkbox" class="switch"></div>
+        <div class="toggle-row"><label for="c-silence">Cut long pauses</label><input id="c-silence" type="checkbox" class="switch"></div>
+      </details>
+
+      <details class="group">
+        <summary>Brand</summary>
+        <label class="lbl" for="c-mark">Corner watermark</label>
+        <input id="c-mark" type="text" maxlength="40" placeholder="@yourchannel">
+        <label class="lbl" for="c-credit">Credit line in descriptions</label>
+        <input id="c-credit" type="text" maxlength="160" placeholder="Clipped from … with permission">
+      </details>
+    </aside>
   </section>
 
-  <section class="results" id="results" hidden>
-    <div class="results-head">
-      <h2>Your clips</h2>
-      <p id="results-note"></p>
+  <!-- Library -->
+  <section class="library" id="library" aria-labelledby="lib-title">
+    <div class="lib-head">
+      <h2 id="lib-title" class="mega-dark">Projects</h2>
+      <p class="mute" id="lib-count"></p>
     </div>
-    <div class="grid" id="grid"></div>
-  </section>
-
-  <section class="library" id="library" hidden>
-    <h2>Earlier jobs</h2>
-    <ul id="jobs"></ul>
+    <div class="lib-grid" id="lib-grid"></div>
   </section>
 </main>
 
-<footer>
-  <p class="credit">Built, developed &amp; owned by <strong>K S Pankaj</strong></p>
-  <p class="fine">Clip only what you own or are allowed to clip. &copy; <span id="year"></span> K S Pankaj. All rights reserved.</p>
+<footer class="foot">
+  <p class="foot-big">CLIPZER</p>
+  <div class="foot-row">
+    <p>Built, developed &amp; owned by <strong>K S Pankaj</strong></p>
+    <p class="mute">Clip only what you own or are allowed to clip. &copy; <span id="year"></span> K S Pankaj. All rights reserved.</p>
+  </div>
 </footer>
 
-<template id="card">
-  <article class="card">
-    <div class="frame">
-      <video controls preload="none" playsinline></video>
-      <span class="score"></span>
+<!-- Clip editor -->
+<div class="editor" id="editor" role="dialog" aria-modal="true" aria-labelledby="ed-title" hidden>
+  <div class="ed-top">
+    <button class="text-btn light" id="ed-close" type="button">&larr; Back to clips</button>
+    <p class="ed-title" id="ed-title"></p>
+    <div class="ed-nav">
+      <button class="icon-btn" id="ed-prev" type="button" aria-label="Previous clip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="icon-btn" id="ed-next" type="button" aria-label="Next clip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
-    <div class="card-body">
-      <h3></h3>
-      <p class="reason"></p>
-      <p class="meta"></p>
-      <div class="card-actions">
-        <a class="btn" download>Download</a>
-        <button class="btn ghost" type="button">Copy title</button>
+  </div>
+  <div class="ed-body">
+    <div class="ed-stage">
+      <div class="ed-frame" id="ed-frame">
+        <video id="ed-video" controls playsinline preload="metadata"></video>
+        <div class="shimmer" id="ed-busy" hidden><p>Rendering…</p></div>
+      </div>
+      <div class="ed-actions">
+        <a class="btn dark" id="ed-dl" href="#">Download MP4</a>
+        <a class="btn" id="ed-srt" href="#">SRT</a>
+        <div class="votes" role="group" aria-label="Rate this clip">
+          <button class="vote" id="vote-up" type="button" aria-pressed="false" aria-label="Good clip, find more like this">&#9650;</button>
+          <button class="vote" id="vote-down" type="button" aria-pressed="false" aria-label="Weak clip, find fewer like this">&#9660;</button>
+        </div>
       </div>
     </div>
-  </article>
-</template>
 
+    <div class="ed-panel controls">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="t-edit" aria-selected="true" aria-controls="p-edit">Edit</button>
+        <button role="tab" id="t-score" aria-selected="false" aria-controls="p-score">Why this clip</button>
+        <button role="tab" id="t-pub" aria-selected="false" aria-controls="p-pub">Publish</button>
+      </div>
+
+      <div class="tabpanel" id="p-edit" role="tabpanel" aria-labelledby="t-edit">
+        <p class="lbl">Trim &middot; drag the handles, they snap to words</p>
+        <canvas class="timeline" id="timeline" height="76" aria-label="Clip timeline"></canvas>
+        <div class="trim">
+          <button class="mini" data-nudge="start:-0.5" type="button">&minus;&frac12;s</button>
+          <span class="mono" id="t-start"></span>
+          <button class="mini" data-nudge="start:0.5" type="button">+&frac12;s</button>
+          <span class="mono mute" id="t-len"></span>
+          <button class="mini" data-nudge="end:-0.5" type="button">&minus;&frac12;s</button>
+          <span class="mono" id="t-end"></span>
+          <button class="mini" data-nudge="end:0.5" type="button">+&frac12;s</button>
+        </div>
+
+        <label class="lbl" for="e-title">Title card text</label>
+        <input id="e-title" type="text" maxlength="120">
+        <div class="toggle-row"><label for="e-show-title">Show title card</label><input id="e-show-title" type="checkbox" class="switch"></div>
+        <div class="toggle-row"><label for="e-caps">Burn in captions</label><input id="e-caps" type="checkbox" class="switch"></div>
+        <p class="lbl">Caption style</p>
+        <div class="styles" id="e-style" role="radiogroup" aria-label="Caption style for this clip"></div>
+        <label class="lbl" for="e-text">Caption words &middot; fix any misheard word</label>
+        <textarea id="e-text" rows="5"></textarea>
+        <p class="lbl">Aspect ratio</p>
+        <div class="seg" id="e-aspect" role="radiogroup" aria-label="Aspect ratio for this clip"></div>
+        <p class="lbl">Framing</p>
+        <div class="seg" id="e-framing" role="radiogroup" aria-label="Framing for this clip"></div>
+        <div id="e-manual-wrap" hidden>
+          <div class="row"><label for="e-manual">Crop position</label><output id="o-manual"></output></div>
+          <input id="e-manual" type="range" min="0" max="1" step="0.01">
+        </div>
+        <div class="toggle-row"><label for="e-silence">Cut long pauses</label><input id="e-silence" type="checkbox" class="switch"></div>
+        <div class="toggle-row"><label for="e-norm">Even out loudness</label><input id="e-norm" type="checkbox" class="switch"></div>
+        <div class="toggle-row"><label for="e-fades">Fade in and out</label><input id="e-fades" type="checkbox" class="switch"></div>
+        <label class="lbl" for="e-mark">Corner watermark</label>
+        <input id="e-mark" type="text" maxlength="40" placeholder="@yourchannel">
+        <div class="panel-actions">
+          <button class="btn light-solid" id="e-render" type="button">Render changes</button>
+          <button class="text-btn light" id="e-reset" type="button">Reset clip</button>
+        </div>
+        <p class="form-error" id="e-error" role="alert" hidden></p>
+      </div>
+
+      <div class="tabpanel" id="p-score" role="tabpanel" aria-labelledby="t-score" hidden>
+        <div class="score-big"><span id="s-total">0</span><small>/100</small></div>
+        <p class="mute small" id="s-reason"></p>
+        <div class="dims" id="s-dims"></div>
+        <p class="mute small">Scores estimate how well a moment stands on its own as a short. They are not view predictions. Rate clips with the arrows to tune future picks.</p>
+      </div>
+
+      <div class="tabpanel" id="p-pub" role="tabpanel" aria-labelledby="t-pub" hidden>
+        <div class="seg" id="pub-platform" role="radiogroup" aria-label="Platform"></div>
+        <div class="pub" id="pub-body"></div>
+        <div class="row gap">
+          <label class="sr" for="pub-tone">Tone</label>
+          <select id="pub-tone"></select>
+          <button class="btn light-solid" id="pub-regen" type="button">Rewrite</button>
+        </div>
+        <p class="mute small" id="pub-engine"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="globe.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
